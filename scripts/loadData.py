@@ -3,8 +3,8 @@ import numpy as np
 import os
 #import cv2
 
-rootDataPath = '../small_train/'
-csvPath = '../csv/train_info.csv'
+#csvPath = '../csv/train_info.csv'
+csvPath = '../csv/result.csv'
 
 def getFilesFromDir(dirPath):
 
@@ -27,9 +27,11 @@ def convertPandaToNumpy(data):
 
 df = pd.read_csv(csvPath)
 
-imgPathAR, relPathAR = getFilesFromDir(rootDataPath)
+print df
 
-targetIndex = df.loc[df['filename'] == relPathAR[0]]
+#imgPathAR, relPathAR = getFilesFromDir(rootDataPath)
+
+#targetIndex = df.loc[df['filename'] == relPathAR[0]]
 
 
 '''
@@ -39,7 +41,7 @@ print 'Artist'
 print targetIndex['artist'].values[0]
 '''
 
-print convertPandaToNumpy(df)
+#print convertPandaToNumpy(df)
 
 '''
 img = cv2.imread(imgPathAR[2])

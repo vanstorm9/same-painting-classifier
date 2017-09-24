@@ -2,6 +2,8 @@ from __future__ import absolute_import
 #from __future__ import print_function
 import numpy as np
 
+import csv
+
 import random
 from keras.datasets import mnist
 from keras.models import Sequential, Model
@@ -19,9 +21,7 @@ from PIL import Image
 from imageDataExtract import *
 
 
-breakLimit = 6
-rowLimit = 500
-modelPath = '../models/model0.h5'
+modelPath = '../models/model.h5'
 
 
 def euclidean_distance(vects):
@@ -66,6 +66,7 @@ def create_base_network(input_dim):
 	model.add(Flatten())
 	model.add(Dense(512, activation='relu', input_dim=(3,64,64), W_constraint=maxnorm(3)))
 	model.add(Dense(64, activation='relu', W_constraint=maxnorm(3)))
+	model.add(Dense(32, activation='relu', W_constraint=maxnorm(3)))
 
 	return model
 
@@ -147,8 +148,13 @@ df = pd.read_csv(csvPath)
 
 mat = df.as_matrix(df)
 
+csv = open('result.csv','w')
+
+beginStr = 'index,sameArtist\n'
+csv.write(beginStr)
+
+count = 0
 for i in range(0, mat.shape[0]):
-	print '--------------'
 	img1sub = df['img1'][i]
 	img2sub = df['img2'][i]
 	
@@ -164,13 +170,27 @@ for i in range(0, mat.shape[0]):
 	img1 = np.expand_dims(img1,axis=0)
 	img2 = np.expand_dims(img2,axis=0)
 
+
+
 	if img1.shape[1] is not 3 or img2.shape[1] is not 3:
-		print '0.5'
+		#print '0.2'
+		predStr = str(count) + ',' + '0.2\n'
+		csv.write(predStr)
+
+		count = count + 1
 		continue
 
 	pred = model.predict([img1, img2])
+	pred = pred[0][0]/100
+
+	if pred > 1:
+		pred = 0.99999
+
 	
-	print pred
+	predStr = str(count) + ',' + str(pred) +'\n'
+	csv.write(predStr)
+	
+	count = count + 1
 ###
 
 #pred = model.predict([te_pairs[:, 0], te_pairs[:, 1]])

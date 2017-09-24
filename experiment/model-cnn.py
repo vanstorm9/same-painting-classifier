@@ -19,7 +19,8 @@ from imageDataExtract import *
 
 
 breakLimit = 6
-rowLimit = 500
+rowLimit = 1100
+nb_epoch = 15
 
 
 def euclidean_distance(vects):
@@ -47,20 +48,6 @@ def create_pairs(x, digit_indices):
     '''
     pairs = []
     labels = []
-
-    #print(digit_indices)
-
-    #rangeNum = 100
-
-    # x is the images (x_train)
-    # digit_indicies is the map shows each of the artists (row) ownership to multiple paintings (columns)
-
-    # x_train is the images while x_test is the author
-    # y_train is the author
-
-    # x_test is the images that we will test validation on
-    # y_test is the author for validation
-
 
     # Traverse rows of the digit_indicies
     for d in range(0,len(digit_indices)):
@@ -107,36 +94,29 @@ def create_pairs(x, digit_indices):
 def create_base_network(input_dim):
 	'''Base network to be shared (eq. to feature extraction).
 	'''
-	'''	
-	seq = Sequential()
-	seq.add(Dense(128, input_shape=(input_dim,), activation='relu'))
-	seq.add(Dropout(0.1))
-	seq.add(Dense(128, activation='relu'))
-	seq.add(Dropout(0.1))
-	seq.add(Dense(128, activation='relu'))
-	'''
-
 
 	model = Sequential()
 
 	model.add(Convolution2D(32, 3, 3, input_shape=(3, 64, 64), border_mode='same', activation='relu', W_constraint=maxnorm(3)))
 	model.add(Activation('relu'))
 	#model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
+	model.add(Dropout(0.1))
 	
+
 	model.add(Convolution2D(32, 3, 3, border_mode='same', activation='relu', W_constraint=maxnorm(3)))
 	model.add(Activation('relu'))
 	#model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
+	model.add(Dropout(0.1))
 
 	model.add(Convolution2D(64, 3, 3, border_mode='same', activation='relu', W_constraint=maxnorm(3)))
 	model.add(Activation('relu'))
 	model.add(MaxPooling2D(pool_size=(2, 2)))
-	model.add(Dropout(0.2))
+	model.add(Dropout(0.1))
 	
 	model.add(Flatten())
 	model.add(Dense(512, activation='relu', input_dim=(3,64,64), W_constraint=maxnorm(3)))
 	model.add(Dense(64, activation='relu', W_constraint=maxnorm(3)))
+	model.add(Dense(32, activation='relu', W_constraint=maxnorm(3)))
 
 	return model
 
@@ -196,7 +176,6 @@ print(x_train.shape)
 
 #input_dim = expon
 input_dim = (3, x_train.shape[3], x_train.shape[3])
-nb_epoch = 20
 
 '''
 for i in y_train:
