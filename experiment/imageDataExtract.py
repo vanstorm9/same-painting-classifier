@@ -66,6 +66,96 @@ def construct_augmentation_data(classificationObj):
 
 
 
+def load_data_test(root_path):
+
+	MAX_ITERATION = 50000
+
+	csvPath = '../csv/train_info.csv'
+
+	slash = '/'
+	root = os.listdir(root_path)
+
+	df = pd.read_csv(csvPath)
+
+	print 'Iterating through folders from ', root_path
+
+	# Iterating through the item directories
+
+	i = 0
+
+	print root_path
+
+	for folders in root:
+		print '-',folders
+
+
+		folders = folders + slash
+		
+		iter_counter = 0
+
+		j = 0
+		for files in os.listdir(root_path + folders):
+			imgO = Image.open(root_path + folders + files)
+
+			pathStr = root_path + folders + files
+
+			img = np.array(imgO).transpose()
+		
+			# Reducing dimension of image
+			if img.ndim is not 2:
+				img = img[0]
+			##
+
+			if img.ndim is not 2 or img.shape[0] is not 64:
+				print 'Skipping ', pathStr, ' of size ', img.shape
+				continue
+
+
+	
+			if i == 0:
+				# This is our first time with the image, so we initalize our main array
+				main_ar = np.array([img])
+			else:
+				# We will just concatenate the array then
+				#print img.shape
+				#print main_ar.shape
+				main_ar = np.concatenate(([img], main_ar))
+	
+
+			# Adding our label array
+			i = i + 1
+
+			iter_counter = iter_counter + 1
+
+			if iter_counter%1000 == 0:
+				print '  At ', iter_counter,' with matrix: ', main_ar.shape
+
+			
+			if iter_counter >= MAX_ITERATION:
+				print '	 Max iterations of ', MAX_ITERATION, ' reached for ', folders 
+				break  
+
+
+
+
+
+	# We have our main array and label array
+
+	print 'main_ar: ', main_ar.shape
+
+
+	print 'Saving numpy arrays'
+	# We are going to save our matrix and label array
+	np.save('../numpy-matrix/test.npy', main_ar)
+	
+
+	print 'Successfully saved numpy arrays!'
+
+	
+	return main_ar
+
+
+
 def load_data(root_path):
 
 	MAX_ITERATION = 50000

@@ -173,6 +173,7 @@ if response == 'l':
 else:
 
 	x_train, x_test, y_train, y_test  = load_data('../dataset/little_train/')
+	#x_train, x_test, y_train, y_test  = load_data_test('../dataset/little_test/')
 
 
 print('Generate / Load time = ', (time()-begin), 's')
@@ -235,8 +236,9 @@ distance = Lambda(euclidean_distance, output_shape=eucl_dist_output_shape)([proc
 
 model = Model(input=[input_a, input_b], output=distance)
 print('Shape:')
-print(tr_pairs.shape)
 print(te_pairs.shape)
+print(te_pairs[:,0].shape)
+print(te_pairs[:,1].shape)
 
 # train
 rms = RMSprop()
@@ -245,7 +247,6 @@ model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
                   validation_data=([te_pairs[:, 0], te_pairs[:, 1]], te_y),
                   batch_size=128,
                   nb_epoch=nb_epoch)
-
 
 
 # compute final accuracy on training and test sets
