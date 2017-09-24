@@ -57,16 +57,21 @@ def create_pairs(x, digit_indices):
     # x_test is the images that we will test validation on
     # y_test is the author for validation
 
-
+    breakLimit = 6
+    rowLimit = 1000
 
     # Traverse rows of the digit_indicies
     for d in range(0,len(digit_indices)):
 	#print d
+
+	if d > rowLimit:
+		break
+
 	# Traverse through the columns
 	for i in range(0,len(digit_indices[d])):
 	
 		# Because we can a MemoryError, we cannot train on entire set
-		if i > 6:
+		if i > breakLimit:
 			break
 
 
@@ -100,15 +105,38 @@ def create_pairs(x, digit_indices):
 def create_base_network(input_dim):
 	'''Base network to be shared (eq. to feature extraction).
 	'''
-	
+	'''	
 	seq = Sequential()
 	seq.add(Dense(128, input_shape=(input_dim,), activation='relu'))
 	seq.add(Dropout(0.1))
 	seq.add(Dense(128, activation='relu'))
 	seq.add(Dropout(0.1))
 	seq.add(Dense(128, activation='relu'))
+	'''
+
+
+	model = Sequential()
+
+	model.add(Convolution2D(32, 3, 3, input_shape=(3, 64, 64), border_mode='same', activation='relu', W_constraint=maxnorm(3)))
+	model.add(Activation('relu'))
+	#model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.2))
 	
-	return seq
+	model.add(Convolution2D(32, 3, 3, border_mode='same', activation='relu', W_constraint=maxnorm(3)))
+	model.add(Activation('relu'))
+	#model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.2))
+
+	model.add(Convolution2D(64, 3, 3, border_mode='same', activation='relu', W_constraint=maxnorm(3)))
+	model.add(Activation('relu'))
+	model.add(MaxPooling2D(pool_size=(2, 2)))
+	model.add(Dropout(0.2))
+	
+	model.add(Flatten())
+	model.add(Dense(512, activation='relu', input_dim=(3,64,64), W_constraint=maxnorm(3)))
+	model.add(Dense(64, activation='relu'))
+
+	return model
 
 
 def compute_accuracy(predictions, labels):
@@ -137,8 +165,8 @@ while True:
 
 begin = time()
 if response == 'l':
-	matrix_path = '../numpy-matrix/main.npy'
-	label_path = '../numpy-matrix/label.npy'
+	matrix_path = '../numpy-matrix-nongrayscale/main.npy'
+	label_path = '../numpy-matrix-nongrayscale/label.npy'
 	x_train, y_train, x_test, y_test = load_matrix(matrix_path, label_path)
 else:
 
@@ -150,8 +178,8 @@ print('Generate / Load time = ', (time()-begin), 's')
 
 expon = x_train.shape[2]*x_train.shape[2]
 
-x_train = x_train.reshape(x_train.shape[0], expon)
-x_test = x_test.reshape(x_test.shape[0], expon)
+#x_train = x_train.reshape(x_train.shape[0], expon)
+#x_test = x_test.reshape(x_test.shape[0], expon)
 
 print(x_test.shape)
 
@@ -163,8 +191,9 @@ x_test /= 255
 
 print(x_train.shape)
 
-input_dim = expon
-nb_epoch = 2000
+#input_dim = expon
+input_dim = (3, x_train.shape[2], x_train.shape[2])
+nb_epoch = 20
 
 '''
 for i in y_train:
