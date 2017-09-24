@@ -18,6 +18,10 @@ from time import time
 from imageDataExtract import *
 
 
+breakLimit = 6
+rowLimit = 500
+
+
 def euclidean_distance(vects):
     x, y = vects
     return K.sqrt(K.maximum(K.sum(K.square(x - y), axis=1, keepdims=True), K.epsilon()))
@@ -57,8 +61,6 @@ def create_pairs(x, digit_indices):
     # x_test is the images that we will test validation on
     # y_test is the author for validation
 
-    breakLimit = 6
-    rowLimit = 1000
 
     # Traverse rows of the digit_indicies
     for d in range(0,len(digit_indices)):
@@ -134,7 +136,6 @@ def create_base_network(input_dim):
 	
 	model.add(Flatten())
 	model.add(Dense(512, activation='relu', input_dim=(3,64,64), W_constraint=maxnorm(3)))
-	model.add(Dense(64, activation='relu'))
 
 	return model
 

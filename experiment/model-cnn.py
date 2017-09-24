@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from __future__ import print_function
+#from __future__ import print_function
 import numpy as np
 
 import random
@@ -16,6 +16,10 @@ from keras.constraints import maxnorm
 from time import time
 
 from imageDataExtract import *
+
+
+breakLimit = 6
+rowLimit = 500
 
 
 def euclidean_distance(vects):
@@ -44,30 +48,66 @@ def create_pairs(x, digit_indices):
     pairs = []
     labels = []
 
-    print(len(digit_indices))
+    #print(digit_indices)
 
-    rangeNum = 11
+    #rangeNum = 100
 
-    n = min([len(digit_indices[d]) for d in range(rangeNum)]) - 1
-    for d in range(rangeNum):
-        for i in range(n):
+    # x is the images (x_train)
+    # digit_indicies is the map shows each of the artists (row) ownership to multiple paintings (columns)
 
-	    print(digit_indices[d].shape)
+    # x_train is the images while x_test is the author
+    # y_train is the author
 
-            z1, z2 = digit_indices[d][i], digit_indices[d][i + 1]
-            pairs += [[x[z1], x[z2]]]
-            inc = random.randrange(1, 10)
-            dn = (d + inc) % 10
-            z1, z2 = digit_indices[d][i], digit_indices[dn][i]
-            pairs += [[x[z1], x[z2]]]
-            labels += [1, 0]
+    # x_test is the images that we will test validation on
+    # y_test is the author for validation
+
+
+    # Traverse rows of the digit_indicies
+    for d in range(0,len(digit_indices)):
+	#print d
+
+	if d > rowLimit:
+		break
+
+	# Traverse through the columns
+	for i in range(0,len(digit_indices[d])):
+	
+		# Because we can a MemoryError, we cannot train on entire set
+		if i > breakLimit:
+			break
+
+
+		# For making positive pairs
+	
+		# retrieves the 
+		z1, z2 = digit_indices[d][i], digit_indices[d][(i+1)%len(digit_indices[d])]
+		#print '---------------'
+		#print 'z1: ', z1
+		#print 'z2: ', z2	
+		pairs += [[x[z1], x[z2]]]
+
+            	inc = random.randrange(0, len(digit_indices)-1)
+            	dn = (d + inc) % len(digit_indices)
+
+		#print dn
+		#print i
+		
+		# For making negative pairs	
+		z1, z2 = digit_indices[d][i], digit_indices[dn][(i)%len(digit_indices[dn])]
+		pairs += [[x[z1],x[z2]]]
+		labels += [1,0]
+		#print np.array(pairs).shape
+
+    print np.array(pairs).shape
+    print np.array(labels).shape
+
     return np.array(pairs), np.array(labels)
 
 
-def create_base_network():
+def create_base_network(input_dim):
 	'''Base network to be shared (eq. to feature extraction).
 	'''
-	'''
+	'''	
 	seq = Sequential()
 	seq.add(Dense(128, input_shape=(input_dim,), activation='relu'))
 	seq.add(Dropout(0.1))
@@ -96,9 +136,8 @@ def create_base_network():
 	
 	model.add(Flatten())
 	model.add(Dense(512, activation='relu', input_dim=(3,64,64), W_constraint=maxnorm(3)))
-	model.add(Dense(64, activation='relu'))
+	model.add(Dense(64, activation='relu', W_constraint=maxnorm(3)))
 
-    
 	return model
 
 
@@ -134,14 +173,17 @@ if response == 'l':
 else:
 
 	x_train, x_test, y_train, y_test  = load_data('../dataset/little_train/')
+
+
 print('Generate / Load time = ', (time()-begin), 's')
 
+
 expon = x_train.shape[2]*x_train.shape[2]
-'''
-x_train = x_train.reshape(x_train.shape[0], expon)
-x_test = x_test.reshape(x_test.shape[0], expon)
-'''
-#print(x_test.shape)
+
+#x_train = x_train.reshape(x_train.shape[0], expon)
+#x_test = x_test.reshape(x_test.shape[0], expon)
+
+print(x_test.shape)
 
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
@@ -151,13 +193,22 @@ x_test /= 255
 
 print(x_train.shape)
 
-input_dim = (3, x_train.shape[2], x_train.shape[2])
+#input_dim = expon
+input_dim = (3, x_train.shape[3], x_train.shape[3])
 nb_epoch = 20
+
+'''
+for i in y_train:
+	print('-----------------')
+	print(i)
+	print(np.where(y_train == i)[0])
+'''
 
 
 
 # create training+test positive and negative pairs
 digit_indices = [np.where(y_train == i)[0] for i in y_train]
+
 tr_pairs, tr_y = create_pairs(x_train, digit_indices)
 
 digit_indices = [np.where(y_test == i)[0] for i in y_test]
@@ -168,7 +219,7 @@ print('------')
 print(len(digit_indices))
 
 # network definition
-base_network = create_base_network()
+base_network = create_base_network(input_dim)
 
 input_a = Input(shape=(input_dim))
 input_b = Input(shape=(input_dim))
@@ -210,3 +261,4 @@ print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
 model.save_weights("../models/model.h5")
 print('')
 print("Saved model to disk")
+
