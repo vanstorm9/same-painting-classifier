@@ -1,6 +1,5 @@
 numpy-matrix/*
 numpy-matrix-nongrayscale/*
-dataset/*
 
 *.swp
 
